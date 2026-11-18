@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { addPurchase, fmtDate, knownVarieties, landedCosts, normName, startOfDay } from '../logic';
 import { useStore } from '../store';
-import { Btn, C, Card, Chip, Field, H, Num, Row } from '../ui';
+import { Btn, C, Card, Chip, ChipRow, DateNav, Field, H, InfoChip, Num, Row, Screen } from '../ui';
 
 type Line = { variety: string; qty: string; cost: string; life: string };
 const blank = (): Line => ({ variety: '', qty: '', cost: '', life: '' });
@@ -46,16 +46,11 @@ export default function Buy({ onSaved }: { onSaved: () => void }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 14 }} keyboardShouldPersistTaps="handled">
+    <Screen>
       <Card>
         <H>Harbor purchase</H>
-        <Row style={{ alignItems: 'center', marginBottom: 10 }}>
-          <Btn title="◀" kind="ghost" onPress={() => setDaysAgo((d) => d + 1)} style={{ paddingHorizontal: 14 }} />
-          <Text style={{ flex: 1, textAlign: 'center', fontWeight: '700', color: C.ink }}>
-            {daysAgo === 0 ? 'Today' : fmtDate(date)} {daysAgo === 0 ? `· ${fmtDate(date)}` : ''}
-          </Text>
-          <Btn title="▶" kind="ghost" disabled={daysAgo === 0} onPress={() => setDaysAgo((d) => Math.max(0, d - 1))} style={{ paddingHorizontal: 14 }} />
-        </Row>
+        <DateNav title={daysAgo === 0 ? `Today · ${fmtDate(date)}` : fmtDate(date)}
+          onPrev={() => setDaysAgo((d) => d + 1)} onNext={() => setDaysAgo((d) => Math.max(0, d - 1))} nextDisabled={daysAgo === 0} />
         <Field label="Harbor / supplier (optional)" value={harbor} onChangeText={setHarbor} placeholder="e.g. Kasimedu" />
       </Card>
 
@@ -66,9 +61,9 @@ export default function Buy({ onSaved }: { onSaved: () => void }) {
             {lines.length > 1 && <Btn kind="ghost" title="Remove" onPress={() => setLines((ls) => ls.filter((_, j) => j !== i))} style={{ paddingVertical: 4 }} />}
           </Row>
           {known.length > 0 && (
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginVertical: 8 }}>
+            <ChipRow style={{ marginVertical: 10 }}>
               {known.map((v) => <Chip key={v} label={v} active={normName(l.variety) === v} onPress={() => pick(i, v)} />)}
-            </View>
+            </ChipRow>
           )}
           <Field label="Variety" value={l.variety} onChangeText={(t) => set(i, { variety: t })} placeholder="e.g. Seer fish" />
           <Row style={{ marginTop: 10 }}>
@@ -77,9 +72,10 @@ export default function Buy({ onSaved }: { onSaved: () => void }) {
             <Field label="Shelf life (days)" value={l.life} onChangeText={(t) => set(i, { life: t })} keyboardType="number-pad" placeholder="3" />
           </Row>
           {valid.includes(l) && (
-            <Text style={{ color: C.sub, marginTop: 8 }}>
-              Landed cost {cur}{landed[valid.indexOf(l)]}/kg
-            </Text>
+            <ChipRow style={{ marginTop: 12 }}>
+              <InfoChip label="Landed cost / kg" value={`${cur}${landed[valid.indexOf(l)]}`} tone="brand" />
+              <InfoChip label="Line total" value={`${cur}${Math.round(Num(l.qty) * Num(l.cost))}`} />
+            </ChipRow>
           )}
         </Card>
       ))}
@@ -89,11 +85,12 @@ export default function Buy({ onSaved }: { onSaved: () => void }) {
       <Card>
         <Field label={`Trip costs: transport, ice, labour (${cur}, total)`} value={extra} onChangeText={setExtra} keyboardType="decimal-pad" placeholder="0" />
         <Text style={{ color: C.sub, marginTop: 6, fontSize: 12 }}>Shared across the fish above in proportion to their value, so margins reflect the true cost.</Text>
-        <Text style={{ marginTop: 10, fontSize: 16, fontWeight: '800', color: C.ink }}>Total spend: {cur}{Math.round(total)}</Text>
+        <ChipRow style={{ marginTop: 12 }}>
+          <InfoChip label="Total spend" value={`${cur}${Math.round(total)}`} tone="brand" />
+        </ChipRow>
       </Card>
 
       <Btn title="Save to cold room" disabled={valid.length === 0} onPress={save} />
-      <View style={{ height: 30 }} />
-    </ScrollView>
+    </Screen>
   );
 }

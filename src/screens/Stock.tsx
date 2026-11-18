@@ -1,9 +1,9 @@
 import React from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { fmtDate, freshness, freshnessLabel, stockRows } from '../logic';
 import { useStore } from '../store';
 import { addWaste } from '../logic';
-import { Btn, C, Card, Empty, Pill, Row, Stat } from '../ui';
+import { Btn, C, Card, ChipRow, Empty, InfoChip, Pill, Row, Screen } from '../ui';
 
 const tone = { expired: 'bad', today: 'bad', soon: 'warn', ok: 'good' } as const;
 
@@ -23,13 +23,11 @@ export default function Stock() {
     ]);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 14 }}>
-      <Card>
-        <Row>
-          <Stat label="In cold room" value={`${totalKg.toFixed(1)} kg`} />
-          <Stat label="Stock value (at cost)" value={`${cur}${Math.round(totalVal)}`} />
-        </Row>
-      </Card>
+    <Screen>
+      <ChipRow style={{ marginBottom: 12 }}>
+        <InfoChip label="In cold room" value={`${totalKg.toFixed(1)} kg`} tone="brand" />
+        <InfoChip label="Stock value (at cost)" value={`${cur}${Math.round(totalVal)}`} />
+      </ChipRow>
 
       {urgent.length > 0 && (
         <Card style={{ backgroundColor: C.warnBg, borderColor: '#F0D08A' }}>
@@ -50,9 +48,10 @@ export default function Stock() {
             <Text style={{ fontSize: 18, fontWeight: '800', color: C.ink }}>{r.variety}</Text>
             <Text style={{ fontSize: 18, fontWeight: '800', color: C.brand }}>{r.qty} kg</Text>
           </Row>
-          <Text style={{ color: C.sub, marginBottom: 6 }}>
-            Avg cost {cur}{r.avgCost}/kg · worth {cur}{Math.round(r.value)}
-          </Text>
+          <ChipRow style={{ marginVertical: 8 }}>
+            <InfoChip label="Avg cost / kg" value={`${cur}${r.avgCost}`} />
+            <InfoChip label="Worth" value={`${cur}${Math.round(r.value)}`} />
+          </ChipRow>
           {r.batches.map((b) => {
             const f = freshness(b, now);
             return (
@@ -76,6 +75,6 @@ export default function Stock() {
           })}
         </Card>
       ))}
-    </ScrollView>
+    </Screen>
   );
 }

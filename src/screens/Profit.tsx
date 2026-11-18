@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, Share, Text, View } from 'react-native';
+import { Share, Text, View } from 'react-native';
 import { fmtDate, weekRange, weekReport, DAY } from '../logic';
 import { useStore } from '../store';
-import { Btn, C, Card, Empty, Field, H, Num, Pill, Row, Stat, toneForMargin } from '../ui';
+import { Btn, C, Card, ChipRow, DateNav, Empty, Field, H, InfoChip, Num, Pill, Row, Screen, toneForMargin } from '../ui';
 
 export default function Profit() {
   const { state, update } = useStore();
@@ -21,27 +21,20 @@ export default function Profit() {
     });
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 14 }} keyboardShouldPersistTaps="handled">
-      <Row style={{ alignItems: 'center', marginBottom: 12 }}>
-        <Btn title="◀" kind="ghost" onPress={() => setOff((o) => o - 1)} style={{ paddingHorizontal: 14 }} />
-        <View style={{ flex: 1, alignItems: 'center' }}>
-          <Text style={{ fontWeight: '800', color: C.ink }}>{label}</Text>
-          <Text style={{ color: C.sub, fontSize: 12 }}>{off === 0 ? 'This week' : off === -1 ? 'Last week' : `${-off} weeks ago`}</Text>
-        </View>
-        <Btn title="▶" kind="ghost" disabled={off >= 0} onPress={() => setOff((o) => o + 1)} style={{ paddingHorizontal: 14 }} />
-      </Row>
+    <Screen>
+      <DateNav title={label} subtitle={off === 0 ? 'This week' : off === -1 ? 'Last week' : `${-off} weeks ago`}
+        onPrev={() => setOff((o) => o - 1)} onNext={() => setOff((o) => o + 1)} nextDisabled={off >= 0} />
 
       <Card>
-        <Row style={{ flexWrap: 'wrap', rowGap: 12 }}>
-          <Stat label="Sales" value={money(rep.revenue)} />
-          <Stat label="Fish cost sold" value={money(rep.cogs)} />
-          <Stat label="Wastage loss" value={money(rep.wasteCost)} tone={rep.wasteCost > 0 ? 'bad' : undefined} />
-          <Stat label="Net profit" value={money(rep.netProfit)} tone={rep.netProfit >= 0 ? 'good' : 'bad'} />
-        </Row>
-        <Row style={{ marginTop: 12, alignItems: 'center' }}>
-          <Pill label={`Net margin ${rep.marginPct}%`} tone={toneForMargin(rep.marginPct)} />
-          <Text style={{ color: C.sub }}>Sold {rep.soldKg} kg · bought {rep.purchasedKg} kg ({money(rep.purchasedValue)})</Text>
-        </Row>
+        <Text style={{ color: C.sub, fontSize: 12, fontWeight: '600' }}>Net profit</Text>
+        <Text style={{ fontSize: 32, fontWeight: '800', color: rep.netProfit >= 0 ? C.good : C.bad }}>{money(rep.netProfit)}</Text>
+        <ChipRow style={{ marginTop: 12 }}>
+          <InfoChip label="Net margin" value={`${rep.marginPct}%`} tone={toneForMargin(rep.marginPct)} />
+          <InfoChip label="Sales" value={money(rep.revenue)} tone="brand" />
+          <InfoChip label="Fish cost sold" value={money(rep.cogs)} />
+          <InfoChip label="Wastage loss" value={money(rep.wasteCost)} tone={rep.wasteCost > 0 ? 'bad' : 'neutral'} />
+        </ChipRow>
+        <Text style={{ color: C.sub, marginTop: 12, fontSize: 13 }}>Sold {rep.soldKg} kg · bought {rep.purchasedKg} kg ({money(rep.purchasedValue)})</Text>
       </Card>
 
       {rep.varieties.length === 0 && <Empty text="No activity this week." />}
@@ -77,7 +70,6 @@ export default function Profit() {
             onChangeText={(t) => update((s) => ({ ...s, settings: { ...s.settings, targetMarginPct: Math.min(90, Num(t)) } }))} />
         </Row>
       </Card>
-      <View style={{ height: 30 }} />
-    </ScrollView>
+    </Screen>
   );
 }

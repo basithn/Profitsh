@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text, View } from 'react-native';
+import { Alert, Text, View } from 'react-native';
 import { addSale, allocateFifo, allocCost, deleteSale, fmtDate, lastSellingPrice, marginPct, priceForMargin, round2, startOfDay, stockRows } from '../logic';
 import { useStore } from '../store';
-import { Btn, C, Card, Chip, Empty, Field, H, Num, Pill, Row, toneForMargin } from '../ui';
+import { Btn, C, Card, Chip, ChipRow, Empty, Field, H, InfoChip, Num, Row, Screen, toneForMargin } from '../ui';
 
 export default function Sell() {
   const { state, update } = useStore();
@@ -20,6 +20,7 @@ export default function Sell() {
   const unitCost = q > 0 && row ? cost / q : row?.avgCost ?? 0;
   const over = row ? q > row.qty : false;
   const m = marginPct(p, unitCost);
+  const target = priceForMargin(unitCost, state.settings.targetMarginPct);
 
   const choose = (v: string) => {
     setVariety(v);
@@ -37,30 +38,34 @@ export default function Sell() {
   const today = state.sales.filter((x) => x.date >= startOfDay(Date.now())).sort((a, b) => b.date - a.date);
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 14 }} keyboardShouldPersistTaps="handled">
+    <Screen>
       <Card>
         <H>Record a sale</H>
         {rows.length === 0 && <Empty text="Nothing in stock to sell." />}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <ChipRow>
           {rows.map((r) => <Chip key={r.variety} label={`${r.variety} · ${r.qty}kg`} active={variety === r.variety} onPress={() => choose(r.variety)} />)}
-        </View>
+        </ChipRow>
         {row && (
           <>
-            <Row style={{ marginTop: 6 }}>
+            <Row style={{ marginTop: 14 }}>
               <Field label="Sold (kg)" value={qty} onChangeText={setQty} keyboardType="decimal-pad" placeholder="0" />
               <Field label={`Price (${cur}/kg)`} value={price} onChangeText={setPrice} keyboardType="decimal-pad" placeholder="0" />
             </Row>
-            <Text style={{ color: C.sub, marginTop: 8 }}>
-              Cost {cur}{round2(unitCost)}/kg · break-even {cur}{round2(unitCost)} · for {state.settings.targetMarginPct}% margin charge {cur}{priceForMargin(unitCost, state.settings.targetMarginPct)}
-            </Text>
+            <ChipRow style={{ marginTop: 14 }}>
+              <InfoChip label="Cost / kg" value={`${cur}${round2(unitCost)}`} />
+              <InfoChip label="Min price (break-even)" value={`${cur}${round2(unitCost)}`} tone="warn" onPress={() => setPrice(String(round2(unitCost)))} />
+              <InfoChip label={`Price for ${state.settings.targetMarginPct}% margin`} value={`${cur}${target}`} tone="brand" onPress={() => setPrice(String(target))} />
+            </ChipRow>
+            <Text style={{ color: C.sub, fontSize: 11, marginTop: 6 }}>Tap a price chip to use it.</Text>
             {q > 0 && p > 0 && !over && (
-              <Row style={{ marginTop: 8, alignItems: 'center' }}>
-                <Pill label={`Margin ${m}%`} tone={toneForMargin(m)} />
-                <Text style={{ color: C.ink, fontWeight: '700' }}>Profit {cur}{round2(q * p - cost)}</Text>
-              </Row>
+              <ChipRow style={{ marginTop: 12 }}>
+                <InfoChip label="Margin" value={`${m}%`} tone={toneForMargin(m)} />
+                <InfoChip label="Profit" value={`${cur}${round2(q * p - cost)}`} tone={q * p - cost >= 0 ? 'good' : 'bad'} />
+                <InfoChip label="Sale total" value={`${cur}${round2(q * p)}`} />
+              </ChipRow>
             )}
             {over && <Text style={{ color: C.bad, marginTop: 8 }}>Only {row.qty} kg in stock</Text>}
-            <Btn title="Save sale" disabled={q <= 0 || p <= 0 || over} onPress={save} style={{ marginTop: 12 }} />
+            <Btn title="Save sale" disabled={q <= 0 || p <= 0 || over} onPress={save} style={{ marginTop: 16 }} />
             <Text style={{ color: C.sub, fontSize: 12, marginTop: 6 }}>Oldest stock is sold first, so cost follows the batch actually sold.</Text>
           </>
         )}
@@ -85,6 +90,6 @@ export default function Sell() {
           </Row>
         ))}
       </Card>
-    </ScrollView>
+    </Screen>
   );
 }

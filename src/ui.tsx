@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, TextInputProps, View, ViewStyle } from 'react-native';
 
 export const C = {
   bg: '#F2F6F8',
@@ -18,11 +18,62 @@ export const C = {
   chip: '#E4EEF2',
 };
 
+export const SP = { page: 16, gap: 12 };
+
+export const Screen = ({ children }: { children: React.ReactNode }) => (
+  <ScrollView contentContainerStyle={{ padding: SP.page, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+    {children}
+  </ScrollView>
+);
+
+export const ChipRow = ({ children, style }: { children: React.ReactNode; style?: ViewStyle }) => (
+  <View style={[{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, style]}>{children}</View>
+);
+
+type Tone = 'good' | 'warn' | 'bad' | 'neutral' | 'brand';
+const TONES: Record<Tone, [string, string]> = {
+  good: [C.goodBg, C.good], warn: [C.warnBg, C.warn], bad: [C.badBg, C.bad], neutral: [C.chip, C.ink], brand: ['#DCEFF5', C.brandDark],
+};
+
+/** Labelled value chip: small caption over a bold value. Tappable when onPress is given. */
+export const InfoChip = ({ label, value, tone = 'neutral', onPress }: { label: string; value: string; tone?: Tone; onPress?: () => void }) => {
+  const [bg, fg] = TONES[tone];
+  const body = (
+    <>
+      <Text style={[s.infoLbl, { color: fg }]}>{label}</Text>
+      <Text style={[s.infoVal, { color: fg }]}>{value}</Text>
+    </>
+  );
+  return onPress ? (
+    <Pressable onPress={onPress} style={({ pressed }) => [s.info, { backgroundColor: bg, opacity: pressed ? 0.7 : 1 }]}>{body}</Pressable>
+  ) : (
+    <View style={[s.info, { backgroundColor: bg }]}>{body}</View>
+  );
+};
+
+export const DateNav = ({ title, subtitle, onPrev, onNext, nextDisabled }: {
+  title: string; subtitle?: string; onPrev: () => void; onNext: () => void; nextDisabled?: boolean;
+}) => (
+  <View style={s.nav}>
+    <Pressable onPress={onPrev} style={s.navBtn} hitSlop={8}><Text style={s.navArrow}>‹</Text></Pressable>
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text style={s.navTitle}>{title}</Text>
+      {!!subtitle && <Text style={s.navSub}>{subtitle}</Text>}
+    </View>
+    <Pressable onPress={onNext} disabled={nextDisabled} style={[s.navBtn, nextDisabled && { opacity: 0.35 }]} hitSlop={8}><Text style={s.navArrow}>›</Text></Pressable>
+  </View>
+);
+
 export const Card = ({ children, style }: { children: React.ReactNode; style?: ViewStyle }) => (
   <View style={[s.card, style]}>{children}</View>
 );
 
-export const H = ({ children }: { children: React.ReactNode }) => <Text style={s.h}>{children}</Text>;
+export const H = ({ children, sub }: { children: React.ReactNode; sub?: string }) => (
+  <View style={{ marginBottom: 12 }}>
+    <Text style={s.h}>{children}</Text>
+    {!!sub && <Text style={s.hSub}>{sub}</Text>}
+  </View>
+);
 
 export const Btn = ({
   title, onPress, kind = 'primary', disabled, style,
@@ -91,17 +142,26 @@ export const Empty = ({ text }: { text: string }) => (
 export const toneForMargin = (m: number): 'good' | 'warn' | 'bad' => (m >= 20 ? 'good' : m >= 0 ? 'warn' : 'bad');
 
 const s = StyleSheet.create({
-  card: { backgroundColor: C.card, borderRadius: 14, padding: 14, marginBottom: 12, borderWidth: 1, borderColor: C.line },
-  h: { fontSize: 18, fontWeight: '800', color: C.ink, marginBottom: 8 },
+  card: { backgroundColor: C.card, borderRadius: 16, padding: 16, marginBottom: SP.gap, borderWidth: 1, borderColor: C.line },
+  h: { fontSize: 18, fontWeight: '800', color: C.ink },
+  hSub: { fontSize: 12, color: C.sub, marginTop: 2 },
   btn: { backgroundColor: C.brand, paddingVertical: 13, paddingHorizontal: 16, borderRadius: 10, alignItems: 'center' },
   btnGhost: { backgroundColor: 'transparent', borderWidth: 1, borderColor: C.brand },
   btnDanger: { backgroundColor: 'transparent', borderWidth: 1, borderColor: C.bad },
   btnTxt: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  chip: { backgroundColor: C.chip, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, marginRight: 8, marginBottom: 8 },
+  chip: { backgroundColor: C.chip, paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20 },
   chipTxt: { color: C.ink, fontWeight: '600' },
   pill: { paddingVertical: 3, paddingHorizontal: 9, borderRadius: 10, alignSelf: 'flex-start' },
   lbl: { fontSize: 12, color: C.sub, marginBottom: 4, fontWeight: '600' },
   input: { borderWidth: 1, borderColor: C.line, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 9, fontSize: 16, color: C.ink, backgroundColor: '#FAFCFD' },
+  info: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 12, minWidth: 96 },
+  infoLbl: { fontSize: 11, fontWeight: '600', opacity: 0.85 },
+  infoVal: { fontSize: 16, fontWeight: '800', marginTop: 1 },
+  nav: { flexDirection: 'row', alignItems: 'center', marginBottom: SP.gap, gap: 10 },
+  navBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: C.card, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
+  navArrow: { fontSize: 26, color: C.brand, lineHeight: 30, fontWeight: '700' },
+  navTitle: { fontWeight: '800', color: C.ink, fontSize: 15 },
+  navSub: { color: C.sub, fontSize: 12, marginTop: 1 },
   stat: { flex: 1, minWidth: 100 },
   statV: { fontSize: 20, fontWeight: '800', color: C.ink },
 });
