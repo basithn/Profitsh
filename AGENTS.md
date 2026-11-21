@@ -39,3 +39,19 @@ Docs: https://docs.expo.dev/eas/index.md
 - If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
 - Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
 - Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+
+## Branch sync
+
+This repo has two long-lived branches that must always stay identical:
+
+- `ccr-5e067442-8yzxt9` (the repository's default branch)
+- `ccr-792448a8-ywcieo`
+
+Every time a change is committed, push it to **both** branches (fast-forward only, no force-push), e.g.:
+
+```bash
+git push origin HEAD:ccr-5e067442-8yzxt9
+git push origin HEAD:ccr-792448a8-ywcieo
+```
+
+Confirm with `git ls-remote --heads origin` that both point to the same commit before finishing a task.
